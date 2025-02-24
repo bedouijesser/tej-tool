@@ -22,3 +22,7 @@ body {
 h1, h2 {
   font-family: "LucaFont", sans-serif;
 }
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}

@@ -115,7 +115,7 @@ export default function Home() {
   return (
     <>
       <main className="min-h-screen bg-[url('/full-img-bg.png')] bg-bottom bg-cover p-4 md:p-8 pb-24 md:pb-48 flex items-center justify-center">
-        <div className="w-full max-w-2xl mx-auto backdrop-blur-sm bg-white  rounded-xl shadow-2xl border border-white/20 p-6 md:p-8 space-y-8 md:space-y-10 animate-fade-in">
+        <div className="w-full max-w-2xl mx-auto bg-white  rounded-xl shadow-2xl border border-white/20 p-6 md:p-8 space-y-8 md:space-y-10 animate-fade-in">
           <div className="text-center flex flex-col items-center space-y-4">
             <div className="flex items-center animate-bounce-slow">
               <a
@@ -201,7 +201,7 @@ export default function Home() {
         </div >
       </main >
 
-      <footer className="relative md:fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-sm border-t shadow-lg">
+      <footer className="relative md:fixed bottom-0 left-0 right-0 bg-white/90  border-t shadow-lg">
         <div className="max-w-2xl mx-auto p-3 md:p-4">
           <p className="text-xs md:text-sm text-gray-600 text-center mb-2">
             Aucune donnée personnelle n&apos;est collectée, stockée ou traitée.
