@@ -11,7 +11,7 @@ import { ResultTabs } from '@/components/salary/ResultTabs';
 import { SalaryInput } from '@/components/salary/SalaryInput';
 import { SalaryType, CalculatorMode, FormData, SalaryTabData } from '@/types/salary';
 import { standardizeNumber, getNumericValue } from '@/utils/number';
-import { calculateResults, calculateFromNet, calculateFromGross } from '@/utils/salary';
+import { calculateResultsFromBase, calculateFromNet, calculateFromGross } from '@/utils/salary';
 import { TaxTable } from '@/components/salary/TaxTable';
 
 const generateBasicTabs = (results: any, salaryType: SalaryType, isAnnual: boolean): SalaryTabData[] => {
@@ -93,6 +93,46 @@ const generateAdvancedTabs = (results: any): SalaryTabData[] => [
     tooltip: 'L\'IRPP est calculé selon un barème progressif sur le revenu imposable annuel.',
     formula: 'Voir barème',
     table: <TaxTable annualIncome={results.revenuImposable * 12} />
+  },
+  {
+    id: 'css',
+    label: 'CSS',
+    icon: '🤝',
+    value: results.css,
+    description: 'Contribution sociale solidaire',
+    negative: true,
+    tooltip: 'La CSS est une contribution de solidarité sociale.',
+    formula: 'Base IRP × 0.5%'
+  },
+  {
+    id: 'revenu_imposable',
+    label: 'Revenu Imposable',
+    icon: '📝',
+    value: results.revenuImposable,
+    description: 'Base de calcul avant déductions',
+    intermediate: true,
+    tooltip: 'Le revenu imposable est calculé à partir du salaire brut annuel moins les déductions familiales.',
+    formula: 'Salaire brut annuel - Déductions familiales'
+  },
+  {
+    id: 'frais_professionnels',
+    label: 'Frais Professionnels',
+    icon: '💼',
+    value: results.fraisProfessionnels,
+    description: 'Déduction forfaitaire',
+    intermediate: true,
+    tooltip: 'Les frais professionnels sont une déduction forfaitaire de 10% du revenu imposable, plafonnée à 2000 DT par an.',
+    formula: 'Min(Revenu imposable × 10%, 2000 DT)'
+  },
+  {
+    id: 'base_irp',
+    label: 'Base IRP',
+    icon: '🧮',
+    value: results.baseIRP,
+    description: 'Base de calcul finale',
+    intermediate: true,
+    tooltip: 'La base IRP est le montant sur lequel sont calculés l\'IRPP et la CSS.',
+    formula: 'Revenu imposable - Frais professionnels - Autres déductions'
   }
 ];
 
@@ -153,10 +193,44 @@ const SalarySimulator = () => {
   };
 
   const handleModeChange = (mode: CalculatorMode) => {
-    setFormData(prev => ({ ...prev, mode }));
+    setFormData(prev => {
+      // If switching to basic mode and current type is BASE, change to GROSS
+      const newSalaryType = mode === CalculatorMode.BASIC && prev.salaryType === SalaryType.BASE 
+        ? SalaryType.GROSS 
+        : prev.salaryType;
+
+      // Calculate new base value if salary type changes
+      let newBaseValue = prev.baseValue;
+      if (newSalaryType !== prev.salaryType) {
+        const numericValue = getNumericValue(prev.inputValue);
+        if (newSalaryType === SalaryType.NET) {
+          newBaseValue = calculateFromNet(numericValue, prev).toString();
+        } else if (newSalaryType === SalaryType.GROSS) {
+          newBaseValue = calculateFromGross(numericValue).toString();
+        }
+      }
+
+      return {
+        ...prev,
+        mode,
+        salaryType: newSalaryType,
+        baseValue: newBaseValue,
+        // Reset to default values when switching modes
+        cnssCode: mode === CalculatorMode.BASIC ? '' : prev.cnssCode,
+        contractType: mode === CalculatorMode.BASIC ? '1' : prev.contractType,
+        isSmig: mode === CalculatorMode.BASIC ? false : prev.isSmig,
+        otherDeductions: mode === CalculatorMode.BASIC ? '' : prev.otherDeductions,
+        allowances: mode === CalculatorMode.BASIC ? [] : prev.allowances,
+        // Keep these values consistent across modes
+        inputValue: prev.inputValue,
+        isAnnual: prev.isAnnual,
+        isChefFamille: prev.isChefFamille,
+        children: prev.children
+      };
+    });
   };
 
-  const results = useMemo(() => calculateResults(getNumericValue(formData.baseValue), {
+  const results = useMemo(() => calculateResultsFromBase(getNumericValue(formData.baseValue), {
     cnssCode: formData.cnssCode,
     contractType: formData.contractType,
     isAnnual: formData.isAnnual,
@@ -219,12 +293,7 @@ const SalarySimulator = () => {
     const updatedChildren = [...formData.children];
     let currentIndex = 0;
 
-    // Reset all children first
-    updatedChildren.forEach(child => {
-      child.charge = false;
-      child.etudiant = false;
-      child.handicape = false;
-    });
+    
 
     // Set regular children
     if (field === 'normal') {
@@ -341,7 +410,7 @@ const SalarySimulator = () => {
                           label="Enfants standards"
                           value={getChildrenByType().normal}
                           onChange={(value) => handleBasicChildrenChange('normal', value)}
-                          max={4 - getChildrenByType().student - getChildrenByType().handicapped}
+                          max={4}
                         />
                         <NumberInput
                           label="Enfants étudiants"
@@ -387,7 +456,7 @@ const SalarySimulator = () => {
 
                 <AllowancesSection
                   allowances={formData.allowances}
-                  onChange={allowances => setFormData(prev => ({ ...prev, allowances }))}
+                  onChangeAction={allowances => setFormData(prev => ({ ...prev, allowances }))}
                 />
 
                 <OtherDeductions

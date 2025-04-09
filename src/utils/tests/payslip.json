@@ -1,0 +1,72 @@
+[
+  {
+    "contract": "1",
+    "employee": "AZIZ",
+    "baseSalary": 5044.15,
+    "allowances": 106.88,
+    "grossSalary": 5151.03,
+    "cnss": 498.62,
+    "taxableSalary": 4652.41,
+    "irpp": 1207.59,
+    "css": 22.30,
+    "netSalary": 3422.52,
+    "reportRounding": 0.18,
+    "netSalaryRounded": 3422.00
+  },
+  {
+    "contract": "1",
+    "employee": "Imen 07",
+    "baseSalary": 624.00,
+    "allowances": 99.14,
+    "grossSalary": 723.15,
+    "cnss": 70.00,
+    "taxableSalary": 653.15,
+    "irpp": 25.68,
+    "netSalary": 624.53,
+    "css": 2.94,
+    "reportRounding": 0.87,
+    "netSalaryRounded": 625.00
+  },
+  { 
+    "contract": "1",
+    "employee": "KAOULA",
+    "baseSalary": 1902.93,
+    "allowances": 106.88,
+    "grossSalary": 2009.80,
+    "cnss": 194.55,
+    "taxableSalary": 1815.25,
+    "irpp": 266.33,
+    "netSalary": 1540.68,
+    "css": 8.24,
+    "reportRounding": 0.11,
+    "netSalaryRounded": 1541.00
+  },
+  {
+    "contract": "2",
+    "employee": "MAHDI",
+    "baseSalary": 920.00,
+    "allowances": 106.88,
+    "grossSalary": 1026.88,
+    "cnss": 0.00,
+    "taxableSalary": 1026.88,
+    "irpp": 0,
+    "netSalary": 1026.88,
+    "css": 0,
+    "reportRounding": 0.79,
+    "netSalaryRounded": 1027.00
+  },
+  {
+    "contract": "1",
+    "employee": "IMEN 12",
+    "baseSalary": 3106.74,
+    "allowances": 106.88,
+    "grossSalary": 3213.62,
+    "cnss": 311.08,
+    "taxableSalary": 2902.54,
+    "irpp": 598.69,
+    "netSalary": 2290.17,
+    "css": 13.68,
+    "reportRounding": 0.78,
+    "netSalaryRounded": 2290.00
+  }
+]

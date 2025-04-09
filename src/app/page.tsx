@@ -163,18 +163,19 @@ export default function Home() {
               {error && (
                 <p className="text-red-500 text-sm">{error}</p>
               )}
-              <p className="text-sm text-gray-500">Format requis : 7 chiffres suivis d&apost;une lettre majuscule (ex: 1234567/A)</p>
+              <p className="text-sm text-gray-500">Format requis : 7 chiffres suivis d'une lettre majuscule (ex: 1234567/A)</p>
             </div>
 
             {taxInfo && (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <h3 className="font-semibold">Informations de l&apos;entreprise</h3>
+                    <h3 className="font-semibold">Informations de l'entreprise</h3>
                     <div className="text-sm space-y-1">
                       <p><span className="text-gray-500">Raison sociale:</span> {taxInfo.raison}</p>
                       <p><span className="text-gray-500">Activité:</span> {taxInfo.activitep}</p>
                       <p><span className="text-gray-500">Situation:</span> {taxInfo.situation}</p>
+                      <p><span className="font-semibold text-gray-500">Obligation Platform TEJ:</span> {taxInfo.obligation}</p>
                     </div>
                   </div>
                   <div className="space-y-2">

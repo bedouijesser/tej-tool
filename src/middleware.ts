@@ -1,10 +1,8 @@
-// src/middleware.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const allowedOrigins = [
   'https://lucapacioli.com.tn',
-  'https://tej-tool-r9qy767kl-bedouijessers-projects.vercel.app',
   'http://localhost:3000'
 ]
 
@@ -26,8 +24,8 @@ export function middleware(request: NextRequest) {
       status: 200,
       headers: {
         'Access-Control-Allow-Origin': isAllowedOrigin ? origin : '',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': '*',
+        'Access-Control-Allow-Headers': '*',
         'Access-Control-Max-Age': '86400',
       },
     })
@@ -40,8 +38,8 @@ export function middleware(request: NextRequest) {
   if (isAllowedOrigin) {
     response.headers.set('Access-Control-Allow-Origin', origin)
   }
-  response.headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  response.headers.set('Access-Control-Allow-Methods', '*')
+  response.headers.set('Access-Control-Allow-Headers', '*')
 
   return response
 }

@@ -1,6 +1,18 @@
-import { TAX_BRACKETS } from '@/constants/tax';
+import { TaxBracket } from '@/constants/tax';
 import { SalaryCalculationResult, SalaryInputData } from '@/types/salary';
 import { getNumericValue } from './number';
+import { contractTypes } from '@/constants/contracts';
+
+export const TAX_BRACKETS: TaxBracket[] = [
+  { min: 0, max: 5000, rate: 0 },
+  { min: 5000, max: 10000, rate: 0.15 },
+  { min: 10000, max: 20000, rate: 0.25 },
+  { min: 20000, max: 30000, rate: 0.30 },
+  { min: 30000, max: 40000, rate: 0.33 },
+  { min: 40000, max: 50000, rate: 0.36 },
+  { min: 50000, max: 70000, rate: 0.38 },
+  { min: 70000, max: Infinity, rate: 0.40 },
+];
 
 export const calculateFromNet = (netSalary: number, formData: SalaryInputData): number => {
     let baseGuess = netSalary * 1.3;
@@ -9,7 +21,7 @@ export const calculateFromNet = (netSalary: number, formData: SalaryInputData): 
     let iteration = 0;
 
     while (iteration < maxIterations) {
-        const testResult = calculateResults(baseGuess, formData);
+        const testResult = calculateResultsFromBase(baseGuess, formData);
         const diff = testResult.netSalary - netSalary;
 
         if (Math.abs(diff) < tolerance) {
@@ -27,47 +39,57 @@ export const calculateFromGross = (grossSalary: number): number => {
     return grossSalary;
 };
 
-export const calculateResults = (baseValue: number, formData: SalaryInputData): SalaryCalculationResult => {
-    const ch = formData.isChefFamille ? 300 : 0;
+export const calculateResultsFromBase = (baseSalary: number, formData: SalaryInputData): SalaryCalculationResult => {
+    const contract = contractTypes.find((c) => c.id === formData.contractType);
+    
+    // Convert annual to monthly if needed
+    const monthlyBase = formData.isAnnual ? baseSalary / 12 : baseSalary;
+    
+    // Calculate gross salary (considering CNSS code 334)
+    const grossSalary = formData.cnssCode === '334' ? monthlyBase - 400 : monthlyBase;
 
-    let [e1, e2, e3, e4] = [0, 0, 0, 0];
+    // Calculate social security contribution (CNSS)
+    const cnss = contract?.taxExempt ? 0 : grossSalary * 0.0968;
+
+    // Calculate annual taxable income base
+    const annualGross = grossSalary * 12;
+
+    // Family head deduction
+    const familyHeadDeduction = formData.isChefFamille ? 300 : 0;
+
+    // Calculate children deductions
+    let childrenDeductions = 0;
     formData.children.forEach((child) => {
         if (child.charge) {
-            let amount = 0;
-            if (!child.handicape && !child.etudiant) amount = 100;
-            else if (!child.handicape && child.etudiant) amount = 1000;
-            else if (child.handicape && !child.etudiant) amount = 2000;
-
-            switch (child.rang) {
-                case 1: e1 = amount; break;
-                case 2: e2 = amount; break;
-                case 3: e3 = amount; break;
-                case 4: e4 = amount; break;
+            if (child.handicape) {
+                childrenDeductions += 2000;
+            } else if (child.etudiant) {
+                childrenDeductions += 1000;
+            } else {
+                childrenDeductions += 100;
             }
         }
     });
 
-    const si = formData.cnssCode === '334' ?
-        (formData.isAnnual ? baseValue / 12 : baseValue) - 400 :
-        (formData.isAnnual ? baseValue / 12 : baseValue);
+    // Calculate annual taxable income
+    const revenuImposableAnnuel = annualGross - familyHeadDeduction - childrenDeductions;
 
-    const somme = e1 + e2 + e3 + e4;
+    // Professional expenses (10% with cap)
+    const fraisProfessionnels = Math.min(revenuImposableAnnuel * 0.10, 2000);
 
-    const otherDeductionsValue = formData.otherDeductionsIsAnnual ?
+    // Other deductions (monthly or annual)
+    const otherDeductionsMonthly = formData.otherDeductionsIsAnnual ?
         getNumericValue(formData.otherDeductions) / 12 :
         getNumericValue(formData.otherDeductions);
 
-    const revenuImposableAnnuel = (si * 12) - ch - somme;
-    const fp = Math.min(revenuImposableAnnuel * 0.10, 2000);
-    const baseIRPAnnuel = revenuImposableAnnuel - fp - (otherDeductionsValue * 12);
+    // Calculate IRP base
+    const baseIRPAnnuel = revenuImposableAnnuel - fraisProfessionnels - (otherDeductionsMonthly * 12);
 
+    // Calculate CSS (if applicable)
+    let css = baseIRPAnnuel > 5000 ? (baseIRPAnnuel * 0.005) / 12 : 0;
+
+    // Calculate IRPP
     let irpp = 0;
-    let css = 0;
-
-    if (baseIRPAnnuel > 5000) {
-        css = (baseIRPAnnuel * 0.005) / 12;
-    }
-
     let remainingIncome = baseIRPAnnuel;
     TAX_BRACKETS.forEach(bracket => {
         if (remainingIncome > bracket.min) {
@@ -80,25 +102,27 @@ export const calculateResults = (baseValue: number, formData: SalaryInputData): 
         }
     });
 
+    // Convert annual IRPP to monthly and adjust for CSS
     irpp = Math.max(0, irpp / 12);
-    irpp = irpp - css;
 
-    const irppf = ['1', '2', '3', '5', '6', '7'].includes(formData.contractType) ? 0 : irpp;
+    // Check for tax-exempt contracts
+    const irppFinal = contract && contract.taxExempt ? 0 :  irpp;
 
-    const grossSalary = si;
-    const cnss = grossSalary * 0.0968;
-    const netSalary = grossSalary - cnss - irppf - css;
-    const sectorAllowances = si * 0.1;
+    // Calculate net salary
+    const netSalary = grossSalary - cnss - irppFinal - css;
+
+    // Calculate sector allowances (10% of gross)
+    const sectorAllowances = grossSalary * 0.1;
 
     return {
-        baseSalary: formData.isAnnual ? baseValue / 12 : baseValue,
+        baseSalary: monthlyBase,
         sectorAllowances,
         grossSalary,
         cnss,
-        irpp: irppf,
+        irpp: irppFinal,
         css,
         netSalary,
-        fraisProfessionnels: fp / 12,
+        fraisProfessionnels: fraisProfessionnels / 12,
         revenuImposable: revenuImposableAnnuel / 12,
         baseIRP: baseIRPAnnuel / 12
     };

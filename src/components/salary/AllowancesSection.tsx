@@ -5,10 +5,10 @@ import { formatInputValue, standardizeNumber } from '@/utils/number';
 
 interface Props {
   allowances: Allowance[];
-  onChange: (allowances: Allowance[]) => void;
+  onChangeAction: (allowances: Allowance[]) => void;
 }
 
-export const AllowancesSection = ({ allowances, onChange }: Props) => {
+export const AllowancesSection = ({ allowances, onChangeAction }: Props) => {
   const handleAllowanceChange = (id: string, field: keyof Allowance, value: string | boolean) => {
     const updatedAllowances = allowances.map(allowance => {
       if (allowance.id === id) {
@@ -22,7 +22,7 @@ export const AllowancesSection = ({ allowances, onChange }: Props) => {
       }
       return allowance;
     });
-    onChange(updatedAllowances);
+    onChangeAction(updatedAllowances);
   };
 
   return (

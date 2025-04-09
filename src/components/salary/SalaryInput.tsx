@@ -1,7 +1,7 @@
 "use client";
 import { SalaryType, FormData, CalculatorMode } from '@/types/salary';
 import { formatInputValue, standardizeNumber } from '@/utils/number';
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useEffect } from 'react';
 
 interface Props {
   formData: FormData;
@@ -22,6 +22,13 @@ export const SalaryInput = ({ formData, onChange, onTypeChange, onPeriodChange }
   };
 
   const isBasicMode = formData.mode === CalculatorMode.BASIC;
+
+  // Ensure we're not using BASE type in basic mode
+  useEffect(() => {
+    if (isBasicMode && formData.salaryType === SalaryType.BASE) {
+      onTypeChange(SalaryType.GROSS);
+    }
+  }, [isBasicMode, formData.salaryType, onTypeChange]);
 
   return (
     <div className="space-y-2">
